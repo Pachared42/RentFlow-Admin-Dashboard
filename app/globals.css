@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+.font-thai {
+  font-family: var(--font-thai), var(--font-latin), system-ui, sans-serif;
+}
+
+.font-latin {
+  font-family: var(--font-latin), system-ui, sans-serif;
+}
