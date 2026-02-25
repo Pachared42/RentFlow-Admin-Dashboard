@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Noto_Sans, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
 
+import Providers from "./providers";
+
 const notoThai = Noto_Sans_Thai({
   subsets: ["thai"],
   weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
@@ -28,7 +30,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th" className={`${notoThai.variable} ${notoSans.variable}`}>
-      <body className="font-thai">{children}</body>
+      <body className="font-thai">
+        <Providers>
+          {children}
+        </Providers>
+      </body>
     </html>
   );
 }
