@@ -28,25 +28,36 @@ import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 const TOKEN_COOKIE = "rf_token";
 
 const pillFieldSX = {
-  "& .MuiOutlinedInput-root": {
-    borderRadius: "12px",
-    overflow: "hidden",
-    backgroundColor: "white",
-    "& .MuiOutlinedInput-notchedOutline": {
-      borderRadius: "12px",
-      borderColor: "rgb(226 232 240)",
+    "& .MuiOutlinedInput-root": {
+        borderRadius: "12px",
+        overflow: "hidden",
+        backgroundColor: "white",
+
+        "& .MuiOutlinedInput-notchedOutline": {
+            borderRadius: "12px",
+            borderColor: "rgb(226 232 240)",
+        },
+
+        "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "rgb(203 213 225)",
+        },
+
+        "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "rgb(15 23 42)",
+        },
+
+        "& .MuiOutlinedInput-input": {
+            padding: "14px 16px",
+            fontWeight: 600,
+        },
     },
-    "&:hover .MuiOutlinedInput-notchedOutline": {
-      borderColor: "rgb(203 213 225)",
+
+    "& input:-webkit-autofill": {
+        WebkitBoxShadow: "0 0 0 100px white inset",
+        WebkitTextFillColor: "inherit",
+        caretColor: "inherit",
+        transition: "background-color 9999s ease-out 0s",
     },
-    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-      borderColor: "rgb(15 23 42)",
-    },
-    "& .MuiOutlinedInput-input": {
-      padding: "14px 16px",
-      fontWeight: 600,
-    },
-  },
 };
 
 function isEmail(v: string) {
@@ -106,17 +117,13 @@ export default function Login() {
     }
 
     return (
-        <Box className="min-h-[calc(100vh-0px)] bg-slate-50">
-            <Container maxWidth="sm" className="relative py-12">
+        <Box className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <Box className="w-full max-w-md">
                 {/* Brand / Header */}
                 <Stack className="mb-6 items-center text-center">
                     <Box className="mb-3 grid h-12 w-12 place-items-center rounded-2xl border border-slate-200 bg-white shadow-sm">
                         <DirectionsCarRoundedIcon />
                     </Box>
-
-                    <Typography className="text-2xl font-extrabold text-slate-900">
-                        RentFlow
-                    </Typography>
                 </Stack>
 
                 <Card
@@ -124,14 +131,15 @@ export default function Login() {
                     className="w-full rounded-2xl! border border-slate-200 bg-white"
                     sx={{ boxShadow: "none" }}
                 >
-                    <CardContent className="p-7">
+                    {/* ให้ scroll เฉพาะใน Card ถ้าเนื้อหาเกินความสูงของสี่เหลี่ยม */}
+                    <CardContent className="p-4! overflow-auto">
                         <Stack spacing={1} className="mb-4 items-center text-center">
                             <Typography variant="h5" className="text-xl font-bold text-slate-900">
-                                เข้าสู่ระบบ
+                                เข้าสู่ระบบแอดมิน RentFlow
                             </Typography>
                         </Stack>
 
-                        <Divider className="my-5! border-slate-200!" />
+                        <Divider className="mt-5! mb-10! border-slate-200!" />
 
                         {error ? (
                             <Alert
@@ -197,7 +205,6 @@ export default function Login() {
                                 }}
                             />
 
-                            {/* ปุ่ม Submit เอาไว้ “ข้างบน” (ตามที่คุณเคยจัดไว้) */}
                             <Button
                                 type="submit"
                                 variant="contained"
@@ -222,7 +229,7 @@ export default function Login() {
                         </Box>
                     </CardContent>
                 </Card>
-            </Container>
+            </Box>
         </Box>
     );
 }
