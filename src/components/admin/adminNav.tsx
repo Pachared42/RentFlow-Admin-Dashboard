@@ -18,7 +18,7 @@ export type AdminNavItem = {
 export const ADMIN_NAV: AdminNavItem[] = [
     { label: "แดชบอร์ด", href: "/admin/dashboard", icon: DashboardRoundedIcon, group: "Operations" },
     { label: "การจอง", href: "/admin/bookings", icon: CalendarMonthRoundedIcon, group: "Operations" },
-    { label: "รถ / Fleet", href: "/admin/cars", icon: DirectionsCarRoundedIcon, group: "Operations" },
+    { label: "รถ", href: "/admin/cars", icon: DirectionsCarRoundedIcon, group: "Operations" },
     { label: "ลูกค้า", href: "/admin/customers", icon: PeopleAltRoundedIcon, group: "Operations" },
 
     { label: "การชำระเงิน", href: "/admin/payments", icon: PaymentsRoundedIcon, group: "Finance" },
