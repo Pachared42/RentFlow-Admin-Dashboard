@@ -27,15 +27,26 @@ import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 
 const TOKEN_COOKIE = "rf_token";
 
-const fieldSX = {
-    "& .MuiOutlinedInput-root": {
-        borderRadius: 14,
-        bgcolor: "white",
-        "& fieldset": { borderColor: "rgb(226 232 240)" },
-        "&:hover fieldset": { borderColor: "rgb(203 213 225)" },
-        "&.Mui-focused fieldset": { borderColor: "rgb(15 23 42)" },
+const pillFieldSX = {
+  "& .MuiOutlinedInput-root": {
+    borderRadius: "12px",
+    overflow: "hidden",
+    backgroundColor: "white",
+    "& .MuiOutlinedInput-notchedOutline": {
+      borderRadius: "12px",
+      borderColor: "rgb(226 232 240)",
     },
-    "& .MuiInputLabel-root": { color: "rgb(100 116 139)" },
+    "&:hover .MuiOutlinedInput-notchedOutline": {
+      borderColor: "rgb(203 213 225)",
+    },
+    "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+      borderColor: "rgb(15 23 42)",
+    },
+    "& .MuiOutlinedInput-input": {
+      padding: "14px 16px",
+      fontWeight: 600,
+    },
+  },
 };
 
 function isEmail(v: string) {
@@ -106,9 +117,6 @@ export default function Login() {
                     <Typography className="text-2xl font-extrabold text-slate-900">
                         RentFlow
                     </Typography>
-                    <Typography className="mt-1 text-sm text-slate-600">
-                        เข้าสู่ระบบเพื่อเข้าใช้งานระบบผู้ดูแล (Admin)
-                    </Typography>
                 </Stack>
 
                 <Card
@@ -120,9 +128,6 @@ export default function Login() {
                         <Stack spacing={1} className="mb-4 items-center text-center">
                             <Typography variant="h5" className="text-xl font-bold text-slate-900">
                                 เข้าสู่ระบบ
-                            </Typography>
-                            <Typography className="text-sm text-slate-600">
-                                ยินดีต้อนรับกลับมา — เข้าสู่แดชบอร์ดเพื่อจัดการระบบ
                             </Typography>
                         </Stack>
 
@@ -144,7 +149,7 @@ export default function Login() {
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 fullWidth
-                                sx={fieldSX}
+                                sx={pillFieldSX}
                                 autoComplete="email"
                                 inputMode="email"
                                 error={!emailOk}
@@ -164,7 +169,7 @@ export default function Login() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 fullWidth
-                                sx={fieldSX}
+                                sx={pillFieldSX}
                                 autoComplete="current-password"
                                 error={!pwOk}
                                 helperText={!pwOk ? "อย่างน้อย 6 ตัวอักษร" : " "}
@@ -192,36 +197,6 @@ export default function Login() {
                                 }}
                             />
 
-                            {/* ลืมรหัสผ่าน + สมัครสมาชิก (วางติดกันแบบที่คุณชอบ) */}
-                            <Stack
-                                direction="row"
-                                className="items-center pt-1 gap-6 justify-center"
-                            >
-                                <Stack direction="row" className="items-center gap-2">
-                                    <Typography className="text-xs text-slate-500">
-                                        ลืมรหัสผ่าน?
-                                    </Typography>
-                                    <Link
-                                        href="/forgot-password"
-                                        className="text-sm font-semibold text-slate-900 underline-offset-2 hover:underline"
-                                    >
-                                        กดที่นี่
-                                    </Link>
-                                </Stack>
-
-                                <Stack direction="row" className="items-center gap-2">
-                                    <Typography className="text-xs text-slate-500">
-                                        ยังไม่มีบัญชี?
-                                    </Typography>
-                                    <Link
-                                        href="/register"
-                                        className="text-sm font-semibold text-slate-900 underline-offset-2 hover:underline"
-                                    >
-                                        สมัครสมาชิก
-                                    </Link>
-                                </Stack>
-                            </Stack>
-
                             {/* ปุ่ม Submit เอาไว้ “ข้างบน” (ตามที่คุณเคยจัดไว้) */}
                             <Button
                                 type="submit"
@@ -244,23 +219,6 @@ export default function Login() {
                                     "เข้าสู่ระบบ"
                                 )}
                             </Button>
-
-                            <Typography className="pt-1 text-center text-[11px] leading-relaxed text-slate-500">
-                                การเข้าสู่ระบบถือว่าคุณยอมรับ{" "}
-                                <Link
-                                    href="/terms"
-                                    className="font-semibold text-slate-700 hover:underline underline-offset-2"
-                                >
-                                    เงื่อนไขการใช้งาน
-                                </Link>{" "}
-                                และ{" "}
-                                <Link
-                                    href="/privacy"
-                                    className="font-semibold text-slate-700 hover:underline underline-offset-2"
-                                >
-                                    นโยบายความเป็นส่วนตัว
-                                </Link>
-                            </Typography>
                         </Box>
                     </CardContent>
                 </Card>
