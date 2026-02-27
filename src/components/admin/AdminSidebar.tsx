@@ -40,9 +40,9 @@ export default function AdminSidebar({
     const content = (
         <Box className="h-full bg-white">
             {/* Brand */}
-            <Box className="px-4 py-4">
+            <Box className="p-2">
                 <Stack direction="row" spacing={1.25} alignItems="center">
-                    <Box className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200 bg-slate-50">
+                    <Box className="grid h-10 w-10 place-items-center rounded-xl! border border-slate-200 bg-slate-50">
                         <DirectionsCarRoundedIcon fontSize="small" />
                     </Box>
                     <Box>
@@ -114,13 +114,6 @@ export default function AdminSidebar({
                         </Box>
                     );
                 })}
-            </Box>
-
-            <Box className="px-4 pb-4 pt-2">
-                <Divider className="border-slate-200!" />
-                <Typography className="mt-3 text-[11px] text-slate-500">
-                    © {new Date().getFullYear()} RentFlow • Admin
-                </Typography>
             </Box>
         </Box>
     );
