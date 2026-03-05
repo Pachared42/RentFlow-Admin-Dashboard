@@ -1,198 +1,380 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { usePathname } from "next/navigation";
 import {
-    AppBar,
-    Avatar,
-    Box,
-    Button,
-    Divider,
-    Drawer,
-    IconButton,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    Stack,
-    Toolbar,
-    Typography,
+  AppBar,
+  Avatar,
+  Box,
+  Button,
+  Divider,
+  Drawer,
+  IconButton,
+  List,
+  ListItemButton,
+  ListItemText,
+  Stack,
+  Toolbar,
+  Chip,
 } from "@mui/material";
+
 import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 import PersonRoundedIcon from "@mui/icons-material/PersonRounded";
+import ChevronRightRoundedIcon from "@mui/icons-material/ChevronRightRounded";
+import ManageAccountsRoundedIcon from "@mui/icons-material/ManageAccountsRounded";
+import LockRoundedIcon from "@mui/icons-material/LockRounded";
+import HistoryRoundedIcon from "@mui/icons-material/HistoryRounded";
 
 type Props = {
-    onOpenMobile: () => void;
-    drawerWidth?: number;
+  onOpenMobile: () => void;
+  drawerWidth?: number;
 };
 
-function titleFromPath(pathname: string | null) {
-    if (!pathname) return "Dashboard";
-    if (pathname.startsWith("/admin/dashboard")) return "แดชบอร์ด";
-    if (pathname.startsWith("/admin/bookings")) return "การจอง";
-    if (pathname.startsWith("/admin/cars")) return "รถ";
-    if (pathname.startsWith("/admin/customers")) return "ลูกค้า";
-    if (pathname.startsWith("/admin/payments")) return "การชำระเงิน";
-    if (pathname.startsWith("/admin/promotions")) return "โปรโมชัน";
-    if (pathname.startsWith("/admin/reports")) return "รายงาน";
-    if (pathname.startsWith("/admin/support")) return "ซัพพอร์ต";
-    if (pathname.startsWith("/admin/settings")) return "ตั้งค่า";
-    return "Admin";
-}
+export default function AdminTopbar({
+  onOpenMobile,
+  drawerWidth = 280,
+}: Props) {
+  const router = useRouter();
+  const [openProfile, setOpenProfile] = React.useState(false);
 
-export default function AdminTopbar({ onOpenMobile, drawerWidth = 280 }: Props) {
-    const pathname = usePathname();
-    const router = useRouter();
-    const title = titleFromPath(pathname);
+  return (
+    <>
+      <AppBar
+        position="fixed"
+        elevation={0}
+        sx={{
+          bgcolor: "white",
+          color: "rgb(15 23 42)",
+          borderBottom: "1px solid rgb(226 232 240)",
+          boxShadow: "0 8px 28px rgba(15, 23, 42, 0.06)",
+          width: { md: `calc(100% - ${drawerWidth}px)` },
+          ml: { md: `${drawerWidth}px` },
+        }}
+      >
+        <Toolbar>
+          <IconButton
+            onClick={onOpenMobile}
+            sx={{
+              display: { xs: "inline-flex", md: "none" },
+              p: 0,
+            }}
+          >
+            <MenuRoundedIcon fontSize="large" />
+          </IconButton>
 
-    const [openProfile, setOpenProfile] = React.useState(false);
+          <Box sx={{ ml: "auto" }}>
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<PersonRoundedIcon />}
+              onClick={() => setOpenProfile(true)}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2,
+                borderColor: "rgb(226 232 240)",
+                color: "rgb(15 23 42)",
+                "&:hover": {
+                  borderColor: "rgb(203 213 225)",
+                  bgcolor: "rgb(248 250 252)",
+                },
+              }}
+            >
+              โปรไฟล์
+            </Button>
+          </Box>
+        </Toolbar>
+      </AppBar>
 
-    const closeProfile = () => setOpenProfile(false);
-    const openProfileDrawer = () => setOpenProfile(true);
+      {/* Profile Drawer */}
+      <Drawer
+        anchor="right"
+        open={openProfile}
+        onClose={() => setOpenProfile(false)}
+        PaperProps={{
+          sx: {
+            width: { xs: "65vw", sm: 300 },
+            borderLeft: "1px solid rgb(226 232 240)",
+          },
+        }}
+      >
+        <Box
+          sx={{
+            px: 2,
+            py: 1,
+            m: { xs: 0, md: 0.5 },
+            position: "relative",
+            height: 56,
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <Box
+            sx={{
+              position: "absolute",
+              left: "50%",
+              top: "50%",
+              transform: "translate(-50%, -50%)",
+              fontWeight: 500,
+              fontSize: 20,
+            }}
+          >
+            โปรไฟล์
+          </Box>
 
-    return (
-        <>
-            <AppBar
-                position="fixed"
-                elevation={0}
+          <Box sx={{ marginLeft: "auto" }}>
+            <IconButton sx={{ p: 0 }} onClick={() => setOpenProfile(false)}>
+              <CloseRoundedIcon fontSize="large" />
+            </IconButton>
+          </Box>
+        </Box>
+
+        <Divider />
+
+        <Box sx={{ px: 1.5, py: 3 }}>
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Avatar sx={{ bgcolor: "rgb(15 23 42)", width: 44, height: 44 }}>
+              A
+            </Avatar>
+
+            <Box sx={{ minWidth: 0 }}>
+              <Box
                 sx={{
-                    bgcolor: "white",
-                    color: "rgb(15 23 42)",
-                    borderBottom: "1px solid rgb(226 232 240)",
-                    boxShadow: "none",
-                    width: { md: `calc(100% - ${drawerWidth}px)` },
-                    ml: { md: `${drawerWidth}px` },
+                  fontWeight: 700,
+                  lineHeight: 1.15,
+                  color: "rgb(15 23 42)",
                 }}
-            >
-                <Toolbar className="min-h-16!">
-                    <Stack direction="row" className="w-full items-center justify-between">
-                        <Stack direction="row" spacing={1.25} alignItems="center">
-                            {/* Mobile menu button */}
-                            <IconButton
-                                onClick={onOpenMobile}
-                                sx={{ display: { xs: "inline-flex", md: "none" } }}
-                                aria-label="Open menu"
-                            >
-                                <MenuRoundedIcon />
-                            </IconButton>
-                        </Stack>
+              >
+                Admin User
+              </Box>
 
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            {/* Profile -> เปิด Sidebar ขวา */}
-                            <Button
-                                size="small"
-                                variant="outlined"
-                                startIcon={<PersonRoundedIcon />}
-                                sx={{
-                                    textTransform: "none",
-                                    borderRadius: 2,
-                                    borderColor: "rgb(226 232 240)",
-                                    color: "rgb(15 23 42)",
-                                    "&:hover": { borderColor: "rgb(203 213 225)", bgcolor: "rgb(248 250 252)" },
-                                }}
-                                onClick={openProfileDrawer}
-                            >
-                                โปรไฟล์
-                            </Button>
-                        </Stack>
-                    </Stack>
-                </Toolbar>
-            </AppBar>
-
-            {/* Right Sidebar (Profile Drawer) */}
-            <Drawer
-                anchor="right"
-                open={openProfile}
-                onClose={closeProfile}
-                PaperProps={{
-                    sx: {
-                        width: { xs: "88vw", sm: 360 },
-                        borderLeft: "1px solid rgb(226 232 240)",
-                    },
+              <Box
+                sx={{
+                  fontSize: 12,
+                  color: "rgb(100 116 139)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  maxWidth: 220,
                 }}
+              >
+                admin@example.com
+              </Box>
+
+              {/* Quick stats */}
+              <Stack
+                direction="row"
+                spacing={0.75}
+                sx={{ mt: 1 }}
+                useFlexGap
+                flexWrap="wrap"
+              >
+                <Chip
+                  size="small"
+                  label="Role: Admin"
+                  sx={{
+                    height: 24,
+                    fontSize: 12,
+                    bgcolor: "rgb(241 245 249)",
+                    border: "1px solid rgb(226 232 240)",
+                  }}
+                />
+                <Chip
+                  size="small"
+                  label="Status: Online"
+                  sx={{
+                    height: 24,
+                    fontSize: 12,
+                    bgcolor: "rgb(236 253 245)",
+                    border: "1px solid rgb(167 243 208)",
+                    color: "rgb(6 95 70)",
+                  }}
+                />
+              </Stack>
+            </Box>
+          </Stack>
+        </Box>
+
+        <Divider />
+
+        <List disablePadding sx={{ px: 1.5, py: 1.5 }}>
+          <ListItemButton
+            onClick={() => {
+              router.push("/admin/settings?tab=general");
+              setOpenProfile(false);
+            }}
+            sx={{
+              borderRadius: 3,
+              border: "1px solid transparent",
+              minHeight: 48,
+              px: 1.5,
+              py: 1.5,
+
+              bgcolor: "transparent",
+              "&:hover": {
+                bgcolor: "rgb(248 250 252)",
+                borderColor: "rgb(148 163 184)",
+              },
+
+              transition:
+                "background-color 150ms ease, border-color 150ms ease",
+            }}
+          >
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2.5,
+                display: "grid",
+                placeItems: "center",
+                bgcolor: "rgb(241 245 249)",
+                border: "1px solid rgb(226 232 240)",
+                mr: 1.5,
+                flex: "0 0 auto",
+              }}
             >
-                {/* Header */}
-                <Box sx={{ px: 2, py: 1.5 }}>
-                    <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Typography sx={{ fontWeight: 800, color: "rgb(15 23 42)" }}>
-                            โปรไฟล์
-                        </Typography>
-                        <IconButton onClick={closeProfile} aria-label="Close profile">
-                            <CloseRoundedIcon />
-                        </IconButton>
-                    </Stack>
-                </Box>
+              <ManageAccountsRoundedIcon
+                sx={{ fontSize: 22, color: "rgb(30 41 59)" }}
+              />
+            </Box>
 
-                <Divider />
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Box
+                sx={{
+                  fontWeight: 600,
+                  color: "rgb(15 23 42)",
+                  lineHeight: 1.2,
+                }}
+              >
+                ตั้งค่าโปรไฟล์
+              </Box>
+              <Box sx={{ fontSize: 12, color: "rgb(100 116 139)", mt: 0.25 }}>
+                แก้ไขข้อมูลส่วนตัวและรหัสผ่าน
+              </Box>
+            </Box>
 
-                {/* Profile Summary */}
-                <Box sx={{ px: 2, py: 2 }}>
-                    <Stack direction="row" spacing={1.5} alignItems="center">
-                        <Avatar sx={{ width: 44, height: 44, bgcolor: "rgb(15 23 42)" }}>
-                            A
-                        </Avatar>
-                        <Box>
-                            <Typography sx={{ fontWeight: 800, color: "rgb(15 23 42)", lineHeight: 1.2 }}>
-                                Admin User
-                            </Typography>
-                            <Typography sx={{ fontSize: 12, color: "rgb(100 116 139)" }}>
-                                admin@example.com
-                            </Typography>
-                        </Box>
-                    </Stack>
-                </Box>
+            <ChevronRightRoundedIcon sx={{ color: "rgb(148 163 184)" }} />
+          </ListItemButton>
 
-                <Divider />
+          {/* เปลี่ยนรหัสผ่าน */}
+          <ListItemButton
+            onClick={() => {
+              router.push("/admin/settings?tab=security");
+              setOpenProfile(false);
+            }}
+            sx={{
+              borderRadius: 3,
+              border: "1px solid transparent",
+              minHeight: 48,
+              px: 1.5,
+              py: 1.5,
+              mt: 1,
+              "&:hover": {
+                bgcolor: "rgb(248 250 252)",
+                borderColor: "rgb(148 163 184)",
+              },
+            }}
+          >
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2.5,
+                display: "grid",
+                placeItems: "center",
+                bgcolor: "rgb(241 245 249)",
+                border: "1px solid rgb(226 232 240)",
+                mr: 1.5,
+              }}
+            >
+              <LockRoundedIcon sx={{ fontSize: 22, color: "rgb(30 41 59)" }} />
+            </Box>
 
-                {/* Actions */}
-                <List disablePadding>
-                    <ListItem disablePadding>
-                        <ListItemButton
-                            onClick={() => {
-                                router.push("/admin/settings");
-                                closeProfile();
-                            }}
-                        >
-                            <ListItemText
-                                primary="ตั้งค่าโปรไฟล์"
-                                primaryTypographyProps={{ fontWeight: 700, color: "rgb(15 23 42)" }}
-                            />
-                        </ListItemButton>
-                    </ListItem>
-                </List>
+            <Box sx={{ flex: 1 }}>
+              <Box sx={{ fontWeight: 600, color: "rgb(15 23 42)" }}>
+                เปลี่ยนรหัสผ่าน
+              </Box>
+              <Box sx={{ fontSize: 12, color: "rgb(100 116 139)" }}>
+                อัปเดตรหัสผ่านบัญชีของคุณ
+              </Box>
+            </Box>
 
-                <Box sx={{ flex: 1 }} />
+            <ChevronRightRoundedIcon sx={{ color: "rgb(148 163 184)" }} />
+          </ListItemButton>
 
-                <Divider />
+          {/* กิจกรรมล่าสุด */}
+          <ListItemButton
+            sx={{
+              borderRadius: 3,
+              border: "1px solid transparent",
+              minHeight: 48,
+              px: 1.5,
+              py: 1.5,
+              mt: 1,
+              "&:hover": {
+                bgcolor: "rgb(248 250 252)",
+                borderColor: "rgb(148 163 184)",
+              },
+            }}
+          >
+            <Box
+              sx={{
+                width: 40,
+                height: 40,
+                borderRadius: 2.5,
+                display: "grid",
+                placeItems: "center",
+                bgcolor: "rgb(241 245 249)",
+                border: "1px solid rgb(226 232 240)",
+                mr: 1.5,
+              }}
+            >
+              <HistoryRoundedIcon
+                sx={{ fontSize: 22, color: "rgb(30 41 59)" }}
+              />
+            </Box>
 
-                {/* Logout */}
-                <Box sx={{ p: 2 }}>
-                    <Button
-                        fullWidth
-                        variant="contained"
-                        startIcon={<LogoutRoundedIcon />}
-                        sx={{
-                            textTransform: "none",
-                            borderRadius: 2,
-                            bgcolor: "rgb(15 23 42)",
-                            boxShadow: "none",
-                            "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
-                        }}
-                        onClick={() => {
-                            // TODO: ใส่ logic logout ของคุณตรงนี้
-                            // เช่น clear token แล้ว router.push("/login")
-                            alert("TODO: logout");
-                            closeProfile();
-                        }}
-                    >
-                        ออกจากระบบ
-                    </Button>
-                </Box>
-            </Drawer>
-        </>
-    );
+            <Box sx={{ flex: 1 }}>
+              <Box sx={{ fontWeight: 600, color: "rgb(15 23 42)" }}>
+                กิจกรรมล่าสุด
+              </Box>
+              <Box sx={{ fontSize: 12, color: "rgb(100 116 139)" }}>
+                ดูประวัติการใช้งานของบัญชีนี้
+              </Box>
+            </Box>
+
+            <ChevronRightRoundedIcon sx={{ color: "rgb(148 163 184)" }} />
+          </ListItemButton>
+        </List>
+
+        <Box sx={{ flex: 1 }} />
+
+        <Divider />
+
+        <Box sx={{ p: 1.5 }}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<LogoutRoundedIcon />}
+            sx={{
+              p: 1.5,
+              textTransform: "none",
+              borderRadius: 3,
+              bgcolor: "rgb(220 38 38)",
+              "&:hover": {
+                bgcolor: "rgb(185 28 28)",
+              },
+            }}
+            onClick={() => {
+              alert("TODO: logout");
+              setOpenProfile(false);
+            }}
+          >
+            ออกจากระบบ
+          </Button>
+        </Box>
+      </Drawer>
+    </>
+  );
 }
