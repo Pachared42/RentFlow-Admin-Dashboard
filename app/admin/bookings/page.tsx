@@ -12,19 +12,30 @@ import {
     Chip,
     Divider,
     Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
+    Drawer,
     Snackbar,
     Alert,
+    Avatar,
+    IconButton,
+    Tooltip,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 
+import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
+import EditNoteRoundedIcon from "@mui/icons-material/EditNoteRounded";
+import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import CancelRoundedIcon from "@mui/icons-material/CancelRounded";
+import TaskAltRoundedIcon from "@mui/icons-material/TaskAltRounded";
+
 type BookingStatus = "pending" | "confirmed" | "cancelled" | "completed";
+type DrawerMode = "detail" | "status" | "cancel" | null;
 
 type BookingRow = {
     id: string;
     carName: string;
+    carImage?: string;
     pickupDate: string;
     returnDate: string;
     pickupLocation: string;
@@ -43,6 +54,7 @@ const SEED: BookingRow[] = [
     {
         id: "BK-1001",
         carName: "BMW 320d M Sport",
+        carImage: "/cosySec1.webp",
         pickupDate: "2026-03-01",
         returnDate: "2026-03-03",
         pickupLocation: "สนามบินสุวรรณภูมิ",
@@ -59,6 +71,7 @@ const SEED: BookingRow[] = [
     {
         id: "BK-1002",
         carName: "BMW 330e M Sport",
+        carImage: "/cosySec2.webp",
         pickupDate: "2026-03-02",
         returnDate: "2026-03-04",
         pickupLocation: "เซ็นทรัลลาดพร้าว",
@@ -75,6 +88,7 @@ const SEED: BookingRow[] = [
     {
         id: "BK-1003",
         carName: "BMW M3 CS",
+        carImage: "/cosySec3.webp",
         pickupDate: "2026-03-03",
         returnDate: "2026-03-05",
         pickupLocation: "สถานีขนส่งหมอชิต",
@@ -91,6 +105,7 @@ const SEED: BookingRow[] = [
     {
         id: "BK-1004",
         carName: "BMW i5 eDrive40 M Sport",
+        carImage: "/cosySec4.webp",
         pickupDate: "2026-03-04",
         returnDate: "2026-03-06",
         pickupLocation: "เซ็นทรัลเวิลด์",
@@ -128,15 +143,45 @@ function getStatusMeta(status: BookingStatus) {
         {
             label: string;
             color: "default" | "success" | "warning" | "error";
+            tone: "amber" | "emerald" | "rose" | "slate";
         }
     > = {
-        pending: { label: "รอดำเนินการ", color: "warning" },
-        confirmed: { label: "ยืนยันแล้ว", color: "success" },
-        cancelled: { label: "ยกเลิก", color: "error" },
-        completed: { label: "เสร็จสิ้น", color: "default" },
+        pending: { label: "รอดำเนินการ", color: "warning", tone: "amber" },
+        confirmed: { label: "ยืนยันแล้ว", color: "success", tone: "emerald" },
+        cancelled: { label: "ยกเลิก", color: "error", tone: "rose" },
+        completed: { label: "เสร็จสิ้น", color: "default", tone: "slate" },
     };
 
     return map[status];
+}
+
+function statusChipSX(tone: ReturnType<typeof getStatusMeta>["tone"]) {
+    if (tone === "amber") {
+        return {
+            border: "1px solid rgb(253 230 138)",
+            bgcolor: "rgb(254 243 199)",
+            color: "rgb(146 64 14)",
+        };
+    }
+    if (tone === "emerald") {
+        return {
+            border: "1px solid rgb(167 243 208)",
+            bgcolor: "rgb(209 250 229)",
+            color: "rgb(6 95 70)",
+        };
+    }
+    if (tone === "rose") {
+        return {
+            border: "1px solid rgb(254 202 202)",
+            bgcolor: "rgb(254 226 226)",
+            color: "rgb(153 27 27)",
+        };
+    }
+    return {
+        border: "1px solid rgb(226 232 240)",
+        bgcolor: "rgb(248 250 252)",
+        color: "rgb(51 65 85)",
+    };
 }
 
 function StatusChip({ s }: { s: BookingStatus }) {
@@ -162,24 +207,68 @@ function SectionCard({
 }) {
     return (
         <Box className="rounded-2xl border border-slate-200 bg-white p-4">
-            <Typography className="mb-3 text-sm font-extrabold tracking-wide text-slate-900">
+            <Typography className="text-xs font-bold uppercase tracking-wider text-slate-500">
                 {title}
             </Typography>
-            <Stack spacing={2}>{children}</Stack>
+            <Divider className="my-2! border-slate-200!" />
+            <Stack spacing={0.5}>{children}</Stack>
+        </Box>
+    );
+}
+
+function CarThumb({
+    src,
+    alt,
+    width = 80,
+    height = 56,
+    rounded = 12,
+}: {
+    src?: string;
+    alt: string;
+    width?: number;
+    height?: number;
+    rounded?: number;
+}) {
+    return (
+        <Box
+            className="overflow-hidden border border-slate-200 bg-slate-100 shrink-0"
+            sx={{
+                width,
+                height,
+                borderRadius: `${rounded}px`,
+            }}
+        >
+            {src ? (
+                <Box
+                    component="img"
+                    src={src}
+                    alt={alt}
+                    sx={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        display: "block",
+                    }}
+                />
+            ) : (
+                <Box className="grid h-full w-full place-items-center text-slate-400">
+                    <DirectionsCarRoundedIcon fontSize="small" />
+                </Box>
+            )}
         </Box>
     );
 }
 
 export default function AdminBookingsPage() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+
     const [rowsData, setRowsData] = React.useState<BookingRow[]>(SEED);
     const [q, setQ] = React.useState("");
     const [status, setStatus] = React.useState<BookingStatus | "all">("all");
 
-    const [detailOpen, setDetailOpen] = React.useState(false);
-    const [statusOpen, setStatusOpen] = React.useState(false);
-    const [cancelConfirmOpen, setCancelConfirmOpen] = React.useState(false);
-
-    const [selectedBooking, setSelectedBooking] = React.useState<BookingRow | null>(null);
+    const [drawerMode, setDrawerMode] = React.useState<DrawerMode>(null);
+    const [selectedBookingId, setSelectedBookingId] = React.useState<string | null>(null);
 
     const [nextStatus, setNextStatus] = React.useState<BookingStatus>("pending");
     const [adminNote, setAdminNote] = React.useState("");
@@ -187,6 +276,11 @@ export default function AdminBookingsPage() {
 
     const [snackOpen, setSnackOpen] = React.useState(false);
     const [snackText, setSnackText] = React.useState("อัปเดตสถานะสำเร็จ");
+
+    const selectedBooking = React.useMemo(
+        () => rowsData.find((item) => item.id === selectedBookingId) ?? null,
+        [rowsData, selectedBookingId]
+    );
 
     const rows = React.useMemo(() => {
         return rowsData.filter((r) => {
@@ -201,36 +295,26 @@ export default function AdminBookingsPage() {
         });
     }, [q, status, rowsData]);
 
-    const refreshSelectedBooking = React.useCallback(
-        (bookingId: string) => {
-            const fresh = rowsData.find((item) => item.id === bookingId) ?? null;
-            setSelectedBooking(fresh);
-        },
-        [rowsData]
-    );
-
-    const handleOpenDetail = (booking: BookingRow) => {
-        setSelectedBooking(booking);
-        setDetailOpen(true);
+    const openDetailDrawer = (booking: BookingRow) => {
+        setSelectedBookingId(booking.id);
+        setDrawerMode("detail");
     };
 
-    const handleCloseDetail = () => {
-        setDetailOpen(false);
-        setSelectedBooking(null);
-    };
-
-    const handleOpenStatus = (booking: BookingRow) => {
-        setSelectedBooking(booking);
+    const openStatusDrawer = (booking: BookingRow) => {
+        setSelectedBookingId(booking.id);
         setNextStatus(booking.status);
         setAdminNote(booking.adminNote ?? "");
         setCustomerNote(booking.customerNote ?? "");
-        setStatusOpen(true);
+        setDrawerMode("status");
     };
 
-    const handleCloseStatus = () => {
-        setStatusOpen(false);
-        setCancelConfirmOpen(false);
-        setSelectedBooking(null);
+    const closeDrawer = () => {
+        setDrawerMode(null);
+    };
+
+    const handleDrawerExited = () => {
+        setSelectedBookingId(null);
+        setNextStatus("pending");
         setAdminNote("");
         setCustomerNote("");
     };
@@ -261,30 +345,24 @@ export default function AdminBookingsPage() {
             )
         );
 
-        setNextStatus(newStatus);
         setSnackText(`อัปเดตสถานะเป็น "${getStatusMeta(newStatus).label}" สำเร็จ`);
         setSnackOpen(true);
-        setStatusOpen(false);
-        setCancelConfirmOpen(false);
+        setDrawerMode(null);
     };
-
-    React.useEffect(() => {
-        if (detailOpen && selectedBooking) {
-            refreshSelectedBooking(selectedBooking.id);
-        }
-    }, [rowsData, detailOpen, selectedBooking, refreshSelectedBooking]);
 
     const quickActions: Array<{
         label: string;
         status: BookingStatus;
         variant: "contained" | "outlined";
         sx: object;
+        icon: React.ReactNode;
         confirmBefore?: boolean;
     }> = [
             {
                 label: "ยืนยัน",
                 status: "confirmed",
                 variant: "contained",
+                icon: <CheckCircleRoundedIcon />,
                 sx: {
                     textTransform: "none",
                     bgcolor: "rgb(22 163 74)",
@@ -296,6 +374,7 @@ export default function AdminBookingsPage() {
                 label: "ยกเลิก",
                 status: "cancelled",
                 variant: "outlined",
+                icon: <CancelRoundedIcon />,
                 confirmBefore: true,
                 sx: {
                     textTransform: "none",
@@ -311,6 +390,7 @@ export default function AdminBookingsPage() {
                 label: "เสร็จสิ้น",
                 status: "completed",
                 variant: "outlined",
+                icon: <TaskAltRoundedIcon />,
                 sx: {
                     textTransform: "none",
                     borderColor: "rgb(100 116 139)",
@@ -351,6 +431,11 @@ export default function AdminBookingsPage() {
                             value={q}
                             onChange={(e) => setQ(e.target.value)}
                             className="w-full sm:w-70"
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: "10px",
+                                },
+                            }}
                         />
                         <TextField
                             size="small"
@@ -359,6 +444,11 @@ export default function AdminBookingsPage() {
                             value={status}
                             onChange={(e) => setStatus(e.target.value as BookingStatus | "all")}
                             className="w-full sm:w-45"
+                            sx={{
+                                "& .MuiOutlinedInput-root": {
+                                    borderRadius: "10px",
+                                },
+                            }}
                         >
                             <MenuItem value="all">ทั้งหมด</MenuItem>
                             <MenuItem value="pending">รอดำเนินการ</MenuItem>
@@ -378,39 +468,98 @@ export default function AdminBookingsPage() {
                                         <Stack
                                             direction={{ xs: "column", md: "row" }}
                                             spacing={2}
-                                            className="items-start md:items-center justify-between"
+                                            className="items-start justify-between"
                                         >
-                                            <Box>
-                                                <Stack direction="row" spacing={1} className="items-center">
-                                                    <Typography className="text-sm font-bold text-slate-900">
-                                                        {b.id}
+                                            <Stack
+                                                direction={{ xs: "column", md: "row" }}
+                                                spacing={2}
+                                                className="min-w-0 flex-1 w-full"
+                                            >
+                                                <Box
+                                                    className="shrink-0 overflow-hidden rounded-xl border border-slate-200 bg-slate-100"
+                                                    sx={{
+                                                        width: {
+                                                            xs: "100%",
+                                                            md: 220,
+                                                            lg: 260,
+                                                        },
+                                                        height: {
+                                                            xs: 180,
+                                                            sm: 220,
+                                                            md: 150,
+                                                            lg: 170,
+                                                        },
+                                                    }}
+                                                >
+                                                    {b.carImage ? (
+                                                        <Box
+                                                            component="img"
+                                                            src={b.carImage}
+                                                            alt={b.carName}
+                                                            sx={{
+                                                                width: "100%",
+                                                                height: "100%",
+                                                                objectFit: "cover",
+                                                                display: "block",
+                                                            }}
+                                                        />
+                                                    ) : (
+                                                        <Box className="grid h-full w-full place-items-center text-slate-400">
+                                                            <DirectionsCarRoundedIcon sx={{ fontSize: 42 }} />
+                                                        </Box>
+                                                    )}
+                                                </Box>
+
+                                                <Box className="min-w-0 flex-1">
+
+                                                    {/* HEADER */}
+                                                    <Stack direction="row" spacing={1.5} className="items-center flex-wrap">
+                                                        <Typography className="text-sm font-extrabold text-slate-900 tracking-wide">
+                                                            {b.id}
+                                                        </Typography>
+
+                                                        <StatusChip s={b.status} />
+                                                    </Stack>
+
+                                                    <Typography className="mt-1 text-lg font-bold text-slate-800">
+                                                        {b.carName}
                                                     </Typography>
-                                                    <StatusChip s={b.status} />
-                                                </Stack>
 
-                                                <Typography className="mt-1 text-sm text-slate-700">
-                                                    {b.carName}
-                                                </Typography>
+                                                    <Divider className="my-2! border-slate-200!" />
 
-                                                <Typography className="mt-1 text-xs text-slate-500">
-                                                    รับรถ: {b.pickupDate} • คืนรถ: {b.returnDate}
-                                                </Typography>
+                                                    <Typography className="text-xs text-slate-500">
+                                                        รับรถ: <span className="font-medium text-slate-700">{b.pickupDate}</span>
+                                                        {" • "}
+                                                        คืนรถ: <span className="font-medium text-slate-700">{b.returnDate}</span>
+                                                    </Typography>
 
-                                                <Typography className="mt-1 text-xs text-slate-500">
-                                                    จุดรับ: {b.pickupLocation} • จุดคืน: {b.returnLocation}
-                                                </Typography>
+                                                    <Typography className="mt-1 text-xs text-slate-500">
+                                                        จุดรับ: <span className="font-medium text-slate-700">{b.pickupLocation}</span>
+                                                        {" • "}
+                                                        จุดคืน: <span className="font-medium text-slate-700">{b.returnLocation}</span>
+                                                    </Typography>
 
-                                                <Typography className="mt-1 text-xs text-slate-500">
-                                                    ผู้จอง: {b.customerName} • {b.phone}
-                                                </Typography>
+                                                    <Typography className="mt-1 text-xs text-slate-500">
+                                                        ลูกค้า: <span className="font-medium text-slate-700">{b.customerName}</span>
+                                                        {" • "}
+                                                        {b.phone}
+                                                    </Typography>
 
-                                                <Typography className="mt-1 text-xs text-slate-400">
-                                                    สร้างเมื่อ: {b.createdAt} • อัปเดตล่าสุด: {b.updatedAt}
-                                                </Typography>
-                                            </Box>
+                                                    <Typography className="mt-2 text-xs text-slate-400">
+                                                        สร้างเมื่อ {b.createdAt} • อัปเดตล่าสุด {b.updatedAt}
+                                                    </Typography>
 
-                                            <Stack spacing={1} className="w-full md:w-auto">
-                                                <Box className="flex items-center justify-between rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 md:w-55">
+                                                </Box>
+                                            </Stack>
+
+                                            <Stack
+                                                spacing={1.5}
+                                                className="w-full md:w-auto"
+                                                sx={{
+                                                    minWidth: { md: 180, lg: 200 },
+                                                }}
+                                            >
+                                                <Box className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
                                                     <Typography className="text-xs text-slate-500">
                                                         ยอดรวม
                                                     </Typography>
@@ -419,11 +568,16 @@ export default function AdminBookingsPage() {
                                                     </Typography>
                                                 </Box>
 
-                                                <Stack direction="row" spacing={1} className="justify-end">
+                                                <Stack
+                                                    direction="row"
+                                                    spacing={1}
+                                                    className="justify-end"
+                                                >
                                                     <Button
-                                                        size="small"
+                                                        size="medium"
                                                         variant="outlined"
-                                                        onClick={() => handleOpenDetail(b)}
+                                                        onClick={() => openDetailDrawer(b)}
+                                                        className="rounded-lg!"
                                                         sx={{
                                                             textTransform: "none",
                                                             borderColor: "rgb(226 232 240)",
@@ -433,9 +587,10 @@ export default function AdminBookingsPage() {
                                                     </Button>
 
                                                     <Button
-                                                        size="small"
+                                                        size="medium"
                                                         variant="contained"
-                                                        onClick={() => handleOpenStatus(b)}
+                                                        onClick={() => openStatusDrawer(b)}
+                                                        className="rounded-lg!"
                                                         sx={{
                                                             textTransform: "none",
                                                             bgcolor: "rgb(15 23 42)",
@@ -453,9 +608,7 @@ export default function AdminBookingsPage() {
                                         </Stack>
                                     </Box>
 
-                                    {idx !== rows.length - 1 ? (
-                                        <Divider className="border-slate-200!" />
-                                    ) : null}
+                                    {idx !== rows.length - 1 ? <Divider className="border-slate-200!" /> : null}
                                 </Box>
                             ))}
 
@@ -471,65 +624,104 @@ export default function AdminBookingsPage() {
                 </Card>
             </Box>
 
-            <Dialog
-                open={detailOpen}
-                onClose={handleCloseDetail}
-                fullWidth
-                maxWidth="md"
+            <Drawer
+                anchor={isMobile ? "bottom" : "right"}
+                open={drawerMode !== null}
+                onClose={closeDrawer}
+                ModalProps={{
+                    keepMounted: true,
+                    onTransitionExited: handleDrawerExited,
+                }}
                 PaperProps={{
                     sx: {
-                        borderRadius: 5,
-                        overflow: "hidden",
+                        width: isMobile ? "100%" : 700,
+                        height: isMobile ? "80%" : "100%",
                     },
                 }}
             >
-                <DialogTitle
-                    sx={{
-                        px: 3,
-                        py: 2.5,
-                        borderBottom: "1px solid rgb(226 232 240)",
-                    }}
-                >
-                    <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={1.5}
-                        className="items-start sm:items-center justify-between"
-                    >
-                        <Box>
-                            <Typography className="text-lg font-extrabold text-slate-900">
-                                รายละเอียดการจอง
-                            </Typography>
-                            {selectedBooking ? (
-                                <Typography className="mt-1 text-sm text-slate-500">
-                                    เลขที่การจอง {selectedBooking.id}
+                <Box className="p-4">
+                    <Stack direction="row" spacing={1.25} className="items-center justify-between">
+                        <Stack direction="row" spacing={1.25} className="items-center min-w-0">
+                            <Box className="min-w-0">
+                                <Typography className="text-sm font-black text-slate-900">
+                                    {drawerMode === "detail"
+                                        ? "รายละเอียดการจอง"
+                                        : drawerMode === "status"
+                                            ? "เปลี่ยนสถานะการจอง"
+                                            : "ยืนยันการยกเลิก"}
                                 </Typography>
-                            ) : null}
-                        </Box>
-
-                        {selectedBooking ? <StatusChip s={selectedBooking.status} /> : null}
-                    </Stack>
-                </DialogTitle>
-
-                <DialogContent sx={{ p: 3, bgcolor: "rgb(248 250 252)" }}>
-                    {selectedBooking && (
-                        <Stack spacing={2}>
-                            <Box className="rounded-3xl border border-slate-200 bg-linear-to-br from-slate-900 to-slate-700 p-5 text-white">
-                                <Typography className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
-                                    Booking Overview
-                                </Typography>
-                                <Typography className="mt-2 text-xl font-extrabold">
-                                    {selectedBooking.carName}
-                                </Typography>
-                                <Typography className="mt-2 text-sm text-slate-200">
-                                    {selectedBooking.pickupDate} → {selectedBooking.returnDate}
-                                </Typography>
-                                <Typography className="mt-4 text-sm text-slate-300">ยอดรวม</Typography>
-                                <Typography className="text-2xl font-extrabold">
-                                    {formatTHB(selectedBooking.totalPrice)}
+                                <Typography className="text-xs text-slate-500">
+                                    {selectedBooking
+                                        ? `${selectedBooking.id} • ${selectedBooking.carName}`
+                                        : "-"}
                                 </Typography>
                             </Box>
+                        </Stack>
 
-                            <Box className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                        <Stack direction="row" spacing={1} className="items-center">
+                            <IconButton onClick={closeDrawer}>
+                                <CloseRoundedIcon />
+                            </IconButton>
+                        </Stack>
+                    </Stack>
+
+                    <Divider className="my-4! border-slate-200!" />
+
+                    {drawerMode === "detail" && selectedBooking ? (
+                        <Stack spacing={2}>
+                            <Box className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                                <Box
+                                    className="relative bg-linear-to-br from-slate-900 to-slate-700"
+                                    sx={{ minHeight: 220 }}
+                                >
+                                    {selectedBooking.carImage ? (
+                                        <Box
+                                            component="img"
+                                            src={selectedBooking.carImage}
+                                            alt={selectedBooking.carName}
+                                            sx={{
+                                                width: "100%",
+                                                height: 220,
+                                                objectFit: "cover",
+                                                display: "block",
+                                                opacity: 0.5,
+                                            }}
+                                        />
+                                    ) : (
+                                        <Box className="grid h-55 w-full place-items-center text-slate-300">
+                                            <DirectionsCarRoundedIcon sx={{ fontSize: 56 }} />
+                                        </Box>
+                                    )}
+
+                                    <Box
+                                        className="absolute inset-0"
+                                        sx={{
+                                            background:
+                                                "linear-gradient(to bottom, rgba(15,23,42,0.82), rgba(15,23,42,0.18))",
+                                        }}
+                                    />
+
+                                    <Box className="absolute inset-x-0 top-0 p-4 text-white">
+                                        <Typography className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+                                            Booking Overview
+                                        </Typography>
+                                        <Stack direction="row" spacing={1} className="mt-2 items-center flex-wrap">
+                                            <Typography className="text-xl font-extrabold">
+                                                {selectedBooking.carName}
+                                            </Typography>
+                                        </Stack>
+                                        <Typography className="mt-2 text-sm text-slate-200">
+                                            {selectedBooking.pickupDate} ถึง {selectedBooking.returnDate}
+                                        </Typography>
+                                        <Typography className="mt-4 text-sm text-slate-300">ยอดรวม</Typography>
+                                        <Typography className="text-2xl font-extrabold">
+                                            {formatTHB(selectedBooking.totalPrice)}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
+
+                            <Box className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                 <SectionCard title="ข้อมูลรถ">
                                     <InfoRow label="รหัสการจอง" value={selectedBooking.id} />
                                     <InfoRow label="รุ่นรถ" value={selectedBooking.carName} />
@@ -573,124 +765,111 @@ export default function AdminBookingsPage() {
                                     </Typography>
                                 </SectionCard>
                             </Box>
+
+                            <Stack direction="row" spacing={1} className="pt-0.5">
+                                <Button
+                                    fullWidth
+                                    size="medium"
+                                    variant="outlined"
+                                    onClick={closeDrawer}
+                                    sx={{
+                                        textTransform: "none",
+                                        borderColor: "rgb(226 232 240)",
+                                        color: "rgb(15 23 42)",
+                                        borderRadius: 2.5,
+                                    }}
+                                >
+                                    ปิดหน้าต่าง
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    size="medium"
+                                    variant="contained"
+                                    onClick={() => setDrawerMode("status")}
+                                    sx={{
+                                        textTransform: "none",
+                                        bgcolor: "rgb(15 23 42)",
+                                        boxShadow: "none",
+                                        borderRadius: 2.5,
+                                        "&:hover": {
+                                            bgcolor: "rgb(2 6 23)",
+                                            boxShadow: "none",
+                                        },
+                                    }}
+                                >
+                                    เปลี่ยนสถานะ
+                                </Button>
+                            </Stack>
                         </Stack>
-                    )}
-                </DialogContent>
-
-                <DialogActions
-                    sx={{
-                        px: 3,
-                        py: 2,
-                        borderTop: "1px solid rgb(226 232 240)",
-                    }}
-                >
-                    <Button
-                        onClick={handleCloseDetail}
-                        variant="outlined"
-                        sx={{
-                            textTransform: "none",
-                            borderColor: "rgb(226 232 240)",
-                            color: "rgb(15 23 42)",
-                        }}
-                    >
-                        ปิดหน้าต่าง
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            <Dialog
-                open={statusOpen}
-                onClose={handleCloseStatus}
-                fullWidth
-                maxWidth="sm"
-                PaperProps={{
-                    sx: {
-                        borderRadius: 5,
-                        overflow: "hidden",
-                    },
-                }}
-            >
-                <DialogTitle
-                    sx={{
-                        px: 3,
-                        py: 2.5,
-                        borderBottom: "1px solid rgb(226 232 240)",
-                    }}
-                >
-                    <Typography className="text-lg font-extrabold text-slate-900">
-                        เปลี่ยนสถานะการจอง
-                    </Typography>
-                    {selectedBooking ? (
-                        <Typography className="mt-1 text-sm text-slate-500">
-                            {selectedBooking.id} • {selectedBooking.carName}
-                        </Typography>
                     ) : null}
-                </DialogTitle>
 
-                <DialogContent sx={{ p: 3, bgcolor: "rgb(248 250 252)" }}>
-                    {selectedBooking && (
+                    {drawerMode === "status" && selectedBooking ? (
                         <Stack spacing={2}>
                             <Box className="rounded-2xl border border-slate-200 bg-white p-4">
-                                <Typography className="text-xs font-medium text-slate-500">
-                                    สถานะปัจจุบัน
-                                </Typography>
-                                <Box className="mt-2">
-                                    <StatusChip s={selectedBooking.status} />
-                                </Box>
-                            </Box>
+                                <Stack direction="row" spacing={1} className="items-center">
+                                    <Typography className="text-sm font-bold text-slate-900">
+                                        สถานะปัจจุบัน
+                                    </Typography>
 
-                            <Box className="rounded-2xl border border-slate-200 bg-white p-4">
-                                <Typography className="mb-3 text-sm font-bold text-slate-900">
-                                    Quick Actions
-                                </Typography>
-
-                                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
-                                    {quickActions.map((action) => (
-                                        <Button
-                                            key={action.status}
-                                            variant={action.variant}
-                                            onClick={() => {
-                                                if (action.confirmBefore) {
-                                                    setCancelConfirmOpen(true);
-                                                    return;
-                                                }
-                                                applyStatusUpdate(action.status);
-                                            }}
-                                            sx={{
-                                                flex: 1,
-                                                ...action.sx,
-                                            }}
-                                        >
-                                            {action.label}
-                                        </Button>
-                                    ))}
+                                    <StatusChip s={nextStatus} />
                                 </Stack>
                             </Box>
 
                             <Box className="rounded-2xl border border-slate-200 bg-white p-4">
-                                <TextField
-                                    select
-                                    fullWidth
-                                    size="small"
-                                    label="สถานะใหม่"
-                                    value={nextStatus}
-                                    onChange={(e) => setNextStatus(e.target.value as BookingStatus)}
-                                >
-                                    <MenuItem value="pending">รอดำเนินการ</MenuItem>
-                                    <MenuItem value="confirmed">ยืนยันแล้ว</MenuItem>
-                                    <MenuItem value="cancelled">ยกเลิก</MenuItem>
-                                    <MenuItem value="completed">เสร็จสิ้น</MenuItem>
-                                </TextField>
+                                <Typography className="text-sm font-bold text-slate-900">
+                                    เลือกสถานะใหม่
+                                </Typography>
+                                <Typography className="mt-1 text-xs text-slate-500">
+                                    เลือกสถานะที่ต้องการ แล้วบันทึกการเปลี่ยนแปลง
+                                </Typography>
 
-                                <Box className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
-                                    <Typography className="text-xs font-medium text-slate-500">
-                                        ตัวอย่างสถานะใหม่
-                                    </Typography>
-                                    <Box className="mt-2">
-                                        <StatusChip s={nextStatus} />
-                                    </Box>
+                                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2} className="mt-4">
+                                    {quickActions.map((action) => {
+                                        const isActive = nextStatus === action.status;
+
+                                        return (
+                                            <Button
+                                                key={action.status}
+                                                variant={isActive ? "contained" : action.variant}
+                                                startIcon={action.icon}
+                                                onClick={() => setNextStatus(action.status)}
+                                                sx={{
+                                                    flex: 1,
+                                                    textTransform: "none",
+                                                    borderRadius: 2.5,
+                                                    ...(isActive
+                                                        ? {
+                                                            bgcolor: "rgb(15 23 42)",
+                                                            color: "white",
+                                                            boxShadow: "none",
+                                                            "&:hover": {
+                                                                bgcolor: "rgb(2 6 23)",
+                                                                boxShadow: "none",
+                                                            },
+                                                        }
+                                                        : action.sx),
+                                                }}
+                                            >
+                                                {action.label}
+                                            </Button>
+                                        );
+                                    })}
+                                </Stack>
+
+                                <Box className="mt-4 rounded-xl border border-dashed border-slate-200 bg-slate-50 p-4">
+                                    <Stack spacing={1}>
+                                        <Stack direction="row" spacing={1} className="items-center">
+                                            <Typography className="text-sm font-bold text-slate-900">
+                                                เลือกสถานะใหม่
+                                            </Typography>
+
+                                            <StatusChip s={nextStatus} />
+                                        </Stack>
+                                    </Stack>
                                 </Box>
+                            </Box>
 
+                            <Box className="rounded-2xl border border-slate-200 bg-white p-4">
                                 <TextField
                                     multiline
                                     minRows={4}
@@ -699,7 +878,11 @@ export default function AdminBookingsPage() {
                                     value={adminNote}
                                     onChange={(e) => setAdminNote(e.target.value)}
                                     placeholder="เช่น ติดต่อแล้ว / รอเอกสาร / ลูกค้าขอเลื่อนเวลา"
-                                    className="mt-4"
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "10px",
+                                        },
+                                    }}
                                 />
 
                                 <TextField
@@ -711,6 +894,11 @@ export default function AdminBookingsPage() {
                                     onChange={(e) => setCustomerNote(e.target.value)}
                                     placeholder="เช่น การจองของคุณได้รับการยืนยันแล้ว / กรุณามาถึงก่อนเวลานัด"
                                     className="mt-4"
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "10px",
+                                        },
+                                    }}
                                 />
 
                                 <Box className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -723,123 +911,122 @@ export default function AdminBookingsPage() {
                                     </Stack>
                                 </Box>
                             </Box>
+
+                            <Stack direction="row" spacing={1} className="pt-0.5">
+                                <Button
+                                    fullWidth
+                                    variant="outlined"
+                                    onClick={closeDrawer}
+                                    sx={{
+                                        textTransform: "none",
+                                        borderColor: "rgb(226 232 240)",
+                                        color: "rgb(15 23 42)",
+                                        borderRadius: 2.5,
+                                    }}
+                                >
+                                    ยกเลิก
+                                </Button>
+
+                                <Button
+                                    fullWidth
+                                    variant="contained"
+                                    onClick={() => {
+                                        if (nextStatus === "cancelled") {
+                                            setDrawerMode("cancel");
+                                            return;
+                                        }
+                                        applyStatusUpdate(nextStatus);
+                                    }}
+                                    sx={{
+                                        textTransform: "none",
+                                        bgcolor: "rgb(15 23 42)",
+                                        boxShadow: "none",
+                                        borderRadius: 2.5,
+                                        "&:hover": {
+                                            bgcolor: "rgb(2 6 23)",
+                                            boxShadow: "none",
+                                        },
+                                    }}
+                                >
+                                    บันทึกสถานะ
+                                </Button>
+                            </Stack>
                         </Stack>
-                    )}
-                </DialogContent>
+                    ) : null}
 
-                <DialogActions
-                    sx={{
-                        px: 3,
-                        py: 2,
-                        borderTop: "1px solid rgb(226 232 240)",
-                    }}
-                >
-                    <Button
-                        onClick={handleCloseStatus}
-                        variant="outlined"
-                        sx={{
-                            textTransform: "none",
-                            borderColor: "rgb(226 232 240)",
-                            color: "rgb(15 23 42)",
-                        }}
-                    >
-                        ยกเลิก
-                    </Button>
+                    {drawerMode === "cancel" && selectedBooking ? (
+                        <Stack spacing={2}>
+                            <Box className="rounded-2xl border border-red-200 bg-red-50 p-4">
+                                <Stack direction="row" spacing={1.25} className="items-start">
+                                    <CarThumb
+                                        src={selectedBooking.carImage}
+                                        alt={selectedBooking.carName}
+                                        width={72}
+                                        height={52}
+                                        rounded={12}
+                                    />
+                                    <Box>
+                                        <Typography className="text-sm font-bold text-slate-900">
+                                            {selectedBooking.id}
+                                        </Typography>
+                                        <Typography className="mt-1 text-sm text-slate-700">
+                                            {selectedBooking.carName}
+                                        </Typography>
+                                        <Typography className="mt-1 text-xs text-slate-500">
+                                            ผู้จอง: {selectedBooking.customerName}
+                                        </Typography>
+                                    </Box>
+                                </Stack>
+                            </Box>
 
-                    <Button
-                        onClick={() => {
-                            if (nextStatus === "cancelled") {
-                                setCancelConfirmOpen(true);
-                                return;
-                            }
-                            applyStatusUpdate(nextStatus);
-                        }}
-                        variant="contained"
-                        sx={{
-                            textTransform: "none",
-                            bgcolor: "rgb(15 23 42)",
-                            boxShadow: "none",
-                            px: 2,
-                            "&:hover": {
-                                bgcolor: "rgb(2 6 23)",
-                                boxShadow: "none",
-                            },
-                        }}
-                    >
-                        บันทึกสถานะ
-                    </Button>
-                </DialogActions>
-            </Dialog>
-
-            <Dialog
-                open={cancelConfirmOpen}
-                onClose={() => setCancelConfirmOpen(false)}
-                fullWidth
-                maxWidth="xs"
-                PaperProps={{
-                    sx: {
-                        borderRadius: 4,
-                    },
-                }}
-            >
-                <DialogTitle sx={{ fontWeight: 800, color: "rgb(15 23 42)" }}>
-                    ยืนยันการยกเลิกการจอง
-                </DialogTitle>
-
-                <DialogContent>
-                    <Stack spacing={1.5}>
-                        <Typography className="text-sm text-slate-700">
-                            คุณต้องการยกเลิก booking นี้ใช่หรือไม่
-                        </Typography>
-                        {selectedBooking ? (
-                            <Box className="rounded-2xl border border-red-200 bg-red-50 p-3">
-                                <Typography className="text-sm font-bold text-slate-900">
-                                    {selectedBooking.id}
-                                </Typography>
+                            <Box>
                                 <Typography className="text-sm text-slate-700">
-                                    {selectedBooking.carName}
+                                    คุณต้องการยกเลิก booking นี้ใช่หรือไม่
                                 </Typography>
-                                <Typography className="mt-1 text-xs text-slate-500">
-                                    ผู้จอง: {selectedBooking.customerName}
+                                <Typography className="mt-2 text-xs text-red-600">
+                                    หลังยืนยันแล้ว สถานะจะถูกเปลี่ยนเป็น “ยกเลิก”
                                 </Typography>
                             </Box>
-                        ) : null}
-                        <Typography className="text-xs text-red-600">
-                            หลังยืนยันแล้ว สถานะจะถูกเปลี่ยนเป็น “ยกเลิก”
-                        </Typography>
-                    </Stack>
-                </DialogContent>
 
-                <DialogActions sx={{ px: 3, py: 2 }}>
-                    <Button
-                        onClick={() => setCancelConfirmOpen(false)}
-                        variant="outlined"
-                        sx={{
-                            textTransform: "none",
-                            borderColor: "rgb(226 232 240)",
-                            color: "rgb(15 23 42)",
-                        }}
-                    >
-                        กลับไปแก้ไข
-                    </Button>
+                            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                                <Button
+                                    fullWidth
+                                    size="medium"
+                                    variant="outlined"
+                                    onClick={() => setDrawerMode("status")}
+                                    sx={{
+                                        textTransform: "none",
+                                        borderColor: "rgb(226 232 240)",
+                                        color: "rgb(15 23 42)",
+                                        borderRadius: 2.5,
+                                    }}
+                                >
+                                    กลับไปแก้ไข
+                                </Button>
 
-                    <Button
-                        onClick={() => applyStatusUpdate("cancelled")}
-                        variant="contained"
-                        sx={{
-                            textTransform: "none",
-                            bgcolor: "rgb(220 38 38)",
-                            boxShadow: "none",
-                            "&:hover": {
-                                bgcolor: "rgb(185 28 28)",
-                                boxShadow: "none",
-                            },
-                        }}
-                    >
-                        ยืนยันการยกเลิก
-                    </Button>
-                </DialogActions>
-            </Dialog>
+                                <Button
+                                    fullWidth
+                                    size="medium"
+                                    variant="contained"
+                                    onClick={() => applyStatusUpdate("cancelled")}
+                                    sx={{
+                                        textTransform: "none",
+                                        bgcolor: "rgb(220 38 38)",
+                                        boxShadow: "none",
+                                        borderRadius: 2.5,
+                                        "&:hover": {
+                                            bgcolor: "rgb(185 28 28)",
+                                            boxShadow: "none",
+                                        },
+                                    }}
+                                >
+                                    ยืนยันการยกเลิก
+                                </Button>
+                            </Stack>
+                        </Stack>
+                    ) : null}
+                </Box>
+            </Drawer>
 
             <Snackbar
                 open={snackOpen}
