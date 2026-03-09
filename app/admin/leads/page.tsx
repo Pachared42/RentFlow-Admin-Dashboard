@@ -44,7 +44,7 @@ type Lead = {
   phone: string;
   channel: "line" | "facebook" | "whatsapp" | "phone";
   status: LeadStatus;
-  createdAt: string; // ISO
+  createdAt: string;
   amountEstimate: number;
   summaryText: string;
   pickupPoint?: string;
@@ -52,7 +52,6 @@ type Lead = {
   pickupDate?: string;
   returnDate?: string;
   carName?: string;
-
   followUpAt?: string | null;
 };
 
@@ -127,6 +126,7 @@ function formatTHB(n: number) {
   const v = Number.isFinite(n) ? n : 0;
   return new Intl.NumberFormat("th-TH", { maximumFractionDigits: 0 }).format(v) + " บาท";
 }
+
 function formatDateTimeTH(iso: string) {
   const d = new Date(iso);
   return new Intl.DateTimeFormat("th-TH", {
@@ -137,34 +137,59 @@ function formatDateTimeTH(iso: string) {
     minute: "2-digit",
   }).format(d);
 }
+
 function statusMeta(s: LeadStatus) {
   if (s === "new") return { label: "ใหม่", tone: "amber" as const };
   if (s === "contacted") return { label: "ติดต่อแล้ว", tone: "sky" as const };
   if (s === "won") return { label: "ปิดการขาย", tone: "emerald" as const };
   return { label: "ไม่สำเร็จ", tone: "rose" as const };
 }
+
 function statusChipSX(tone: ReturnType<typeof statusMeta>["tone"]) {
-  if (tone === "amber")
-    return { border: "1px solid rgb(253 230 138)", bgcolor: "rgb(254 243 199)", color: "rgb(146 64 14)" };
-  if (tone === "sky")
-    return { border: "1px solid rgb(186 230 253)", bgcolor: "rgb(224 242 254)", color: "rgb(3 105 161)" };
-  if (tone === "emerald")
-    return { border: "1px solid rgb(167 243 208)", bgcolor: "rgb(209 250 229)", color: "rgb(6 95 70)" };
-  return { border: "1px solid rgb(254 202 202)", bgcolor: "rgb(254 226 226)", color: "rgb(153 27 27)" };
+  if (tone === "amber") {
+    return {
+      border: "1px solid rgb(253 230 138)",
+      bgcolor: "rgb(254 243 199)",
+      color: "rgb(146 64 14)",
+    };
+  }
+  if (tone === "sky") {
+    return {
+      border: "1px solid rgb(186 230 253)",
+      bgcolor: "rgb(224 242 254)",
+      color: "rgb(3 105 161)",
+    };
+  }
+  if (tone === "emerald") {
+    return {
+      border: "1px solid rgb(167 243 208)",
+      bgcolor: "rgb(209 250 229)",
+      color: "rgb(6 95 70)",
+    };
+  }
+  return {
+    border: "1px solid rgb(254 202 202)",
+    bgcolor: "rgb(254 226 226)",
+    color: "rgb(153 27 27)",
+  };
 }
+
 function channelLabel(c: Lead["channel"]) {
   if (c === "line") return "LINE";
   if (c === "facebook") return "Facebook";
   if (c === "whatsapp") return "WhatsApp";
   return "โทร";
 }
+
 function toTelHref(phone: string) {
   return `tel:${phone.replace(/\s+/g, "")}`;
 }
+
 function toChatHref(channel: Lead["channel"], lead: Lead) {
   const msg = encodeURIComponent(
     `สนใจจองรถ (Lead ${lead.id})\nชื่อ: ${lead.name}\nโทร: ${lead.phone}\nรถ: ${lead.carName ?? "-"}\nรับ: ${lead.pickupDate ?? "-"} (${lead.pickupPoint ?? "-"})\nคืน: ${lead.returnDate ?? "-"} (${lead.returnPoint ?? "-"})\nยอดประมาณ: ${formatTHB(lead.amountEstimate)}\nรายละเอียด: ${lead.summaryText}`
   );
+
   if (channel === "line") return `https://line.me/R/msg/text/?${msg}`;
   if (channel === "whatsapp") {
     const p = lead.phone.replace(/\D/g, "");
@@ -173,6 +198,7 @@ function toChatHref(channel: Lead["channel"], lead: Lead) {
   if (channel === "facebook") return `https://www.facebook.com/messages/`;
   return toTelHref(lead.phone);
 }
+
 function buildSummaryText(lead: Lead) {
   return [
     `Lead ${lead.id}`,
@@ -187,15 +213,19 @@ function buildSummaryText(lead: Lead) {
     `รายละเอียด: ${lead.summaryText}`,
   ].join("\n");
 }
+
 function followUpBadge(followUpAt?: string | null) {
   if (!followUpAt) return null;
+
   const due = new Date(followUpAt);
   const now = new Date();
 
   const startToday = new Date(now);
   startToday.setHours(0, 0, 0, 0);
+
   const startTomorrow = new Date(startToday);
   startTomorrow.setDate(startTomorrow.getDate() + 1);
+
   const startDayAfter = new Date(startTomorrow);
   startDayAfter.setDate(startDayAfter.getDate() + 1);
 
@@ -203,6 +233,31 @@ function followUpBadge(followUpAt?: string | null) {
   if (due >= startToday && due < startTomorrow) return { label: "ติดตามวันนี้", tone: "amber" as const };
   if (due >= startTomorrow && due < startDayAfter) return { label: "ติดตามพรุ่งนี้", tone: "sky" as const };
   return { label: "มีนัดติดตาม", tone: "slate" as const };
+}
+
+function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <Box className="grid grid-cols-1 gap-1 sm:grid-cols-[120px_1fr]">
+      <Typography className="text-sm font-medium text-slate-500">{label}</Typography>
+      <Box className="text-sm font-semibold text-slate-900">{value}</Box>
+    </Box>
+  );
+}
+
+function SectionCard({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Box className="rounded-2xl border border-slate-200 bg-white p-4">
+      <Typography className="text-sm font-bold text-slate-900">{title}</Typography>
+      <Divider className="my-3 border-slate-200!" />
+      <Stack spacing={2}>{children}</Stack>
+    </Box>
+  );
 }
 
 export default function AdminLeadsPage() {
@@ -218,7 +273,7 @@ export default function AdminLeadsPage() {
   const [openId, setOpenId] = React.useState<string | null>(null);
   const selected = React.useMemo(() => rows.find((r) => r.id === openId) ?? null, [rows, openId]);
 
-  const [followUpLocal, setFollowUpLocal] = React.useState<string>("");
+  const [followUpLocal, setFollowUpLocal] = React.useState("");
 
   React.useEffect(() => {
     if (!selected?.followUpAt) {
@@ -232,7 +287,11 @@ export default function AdminLeadsPage() {
     );
   }, [selected?.id, selected?.followUpAt]);
 
-  const [snack, setSnack] = React.useState<{ open: boolean; msg: string; type: "success" | "error" | "info" }>({
+  const [snack, setSnack] = React.useState<{
+    open: boolean;
+    msg: string;
+    type: "success" | "error" | "info";
+  }>({
     open: false,
     msg: "",
     type: "success",
@@ -265,11 +324,14 @@ export default function AdminLeadsPage() {
     return { total, newCount, contacted, won, lost };
   }, [rows]);
 
-  const roundedFieldSX = { "& .MuiOutlinedInput-root": { borderRadius: "14px" } };
+  const roundedFieldSX = {
+    "& .MuiOutlinedInput-root": { borderRadius: "14px" },
+  };
 
   function updateStatus(id: string, s: LeadStatus) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, status: s } : r)));
   }
+
   function updateLead(id: string, patch: Partial<Lead>) {
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }
@@ -279,7 +341,11 @@ export default function AdminLeadsPage() {
       await navigator.clipboard.writeText(buildSummaryText(lead));
       setSnack({ open: true, msg: "คัดลอกข้อความสรุปแล้ว", type: "success" });
     } catch {
-      setSnack({ open: true, msg: "คัดลอกไม่สำเร็จ (เบราว์เซอร์บล็อก clipboard)", type: "error" });
+      setSnack({
+        open: true,
+        msg: "คัดลอกไม่สำเร็จ (เบราว์เซอร์บล็อก clipboard)",
+        type: "error",
+      });
     }
   }
 
@@ -329,7 +395,7 @@ export default function AdminLeadsPage() {
     <Box className="grid gap-4">
       <Box>
         <Typography variant="h6" className="text-xl font-extrabold text-slate-900">
-          จองผ่านแชท 
+          จองผ่านแชท
         </Typography>
         <Typography className="text-sm text-slate-600">
           รวมลูกค้าที่ทักเข้ามา และติดตามสถานะการปิดการขายแบบรวดเร็ว
@@ -338,11 +404,16 @@ export default function AdminLeadsPage() {
 
       <Card elevation={0} className="rounded-2xl! border border-slate-200 bg-white">
         <CardContent className="p-5">
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={2} className="items-start sm:items-center justify-between">
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={2}
+            className="items-start sm:items-center justify-between"
+          >
             <Stack direction="row" spacing={1.25} className="items-center">
               <Box className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200 bg-slate-50">
                 <ForumRoundedIcon fontSize="small" />
               </Box>
+
               <Box>
                 <Typography className="text-sm font-bold text-slate-900">สรุป Leads</Typography>
                 <Typography className="mt-1 text-xs text-slate-500">
@@ -361,7 +432,13 @@ export default function AdminLeadsPage() {
                 "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
                 borderRadius: 2,
               }}
-              onClick={() => setSnack({ open: true, msg: "พร้อมต่อ API เพื่อดึง Lead จริง", type: "info" })}
+              onClick={() =>
+                setSnack({
+                  open: true,
+                  msg: "พร้อมต่อ API เพื่อดึง Lead จริง",
+                  type: "info",
+                })
+              }
             >
               จัดการ Leads
             </Button>
@@ -369,7 +446,6 @@ export default function AdminLeadsPage() {
         </CardContent>
       </Card>
 
-      {/* KPI (คงไว้ แต่โทนเดียว) */}
       <Box className="grid gap-4 sm:grid-cols-5">
         {[
           { label: "ทั้งหมด", value: kpi.total, tone: "slate" as const },
@@ -429,7 +505,6 @@ export default function AdminLeadsPage() {
         ))}
       </Box>
 
-      {/* Filters */}
       <Card elevation={0} className="rounded-2xl! border border-slate-200 bg-white">
         <CardContent className="p-5">
           <Stack direction={{ xs: "column", md: "row" }} spacing={2} className="items-stretch md:items-center">
@@ -453,7 +528,7 @@ export default function AdminLeadsPage() {
               select
               label="สถานะ"
               value={status}
-              onChange={(e) => setStatus(e.target.value as any)}
+              onChange={(e) => setStatus(e.target.value as LeadStatus | "all")}
               size="small"
               sx={roundedFieldSX}
               className="min-w-40"
@@ -476,7 +551,7 @@ export default function AdminLeadsPage() {
               select
               label="ช่องทาง"
               value={channel}
-              onChange={(e) => setChannel(e.target.value as any)}
+              onChange={(e) => setChannel(e.target.value as Lead["channel"] | "all")}
               size="small"
               sx={roundedFieldSX}
               className="min-w-40"
@@ -491,7 +566,6 @@ export default function AdminLeadsPage() {
         </CardContent>
       </Card>
 
-      {/* List */}
       <Card elevation={0} className="rounded-2xl! border border-slate-200 bg-white">
         <CardContent className="p-0">
           <Box className="px-5 py-4 flex items-center justify-between">
@@ -507,7 +581,11 @@ export default function AdminLeadsPage() {
 
               return (
                 <Box key={r.id} className="px-5 py-4 hover:bg-slate-50 transition-colors">
-                  <Stack direction={{ xs: "column", lg: "row" }} spacing={2} className="items-start lg:items-center justify-between">
+                  <Stack
+                    direction={{ xs: "column", lg: "row" }}
+                    spacing={2}
+                    className="items-start lg:items-center justify-between"
+                  >
                     <Box className="min-w-0">
                       <Stack direction="row" spacing={1} className="items-center flex-wrap">
                         <Typography className="text-sm font-black text-slate-900">{r.id}</Typography>
@@ -515,12 +593,22 @@ export default function AdminLeadsPage() {
                         <Chip
                           size="small"
                           label={sm.label}
-                          sx={{ ...statusChipSX(sm.tone), height: 22, fontSize: 11, fontWeight: 800 }}
+                          sx={{
+                            ...statusChipSX(sm.tone),
+                            height: 22,
+                            fontSize: 11,
+                            fontWeight: 800,
+                          }}
                         />
 
                         <Chip size="small" label={channelLabel(r.channel)} variant="outlined" />
                         <Chip size="small" label={formatTHB(r.amountEstimate)} variant="outlined" />
-                        <Chip size="small" label={formatDateTimeTH(r.createdAt)} variant="outlined" sx={{ color: "rgb(100 116 139)" }} />
+                        <Chip
+                          size="small"
+                          label={formatDateTimeTH(r.createdAt)}
+                          variant="outlined"
+                          sx={{ color: "rgb(100 116 139)" }}
+                        />
 
                         {fu ? (
                           <Chip
@@ -533,17 +621,23 @@ export default function AdminLeadsPage() {
                               fontSize: 11,
                               fontWeight: 800,
                               ...(fu.tone === "slate"
-                                ? { border: "1px solid rgb(226 232 240)", bgcolor: "rgb(248 250 252)", color: "rgb(51 65 85)" }
+                                ? {
+                                    border: "1px solid rgb(226 232 240)",
+                                    bgcolor: "rgb(248 250 252)",
+                                    color: "rgb(51 65 85)",
+                                  }
                                 : statusChipSX(fu.tone === "amber" ? "amber" : fu.tone === "sky" ? "sky" : "rose")),
                             }}
                           />
                         ) : null}
                       </Stack>
 
-                      <Typography className="mt-1 text-sm text-slate-700">
+                      <Typography className="mt-1 text-sm font-semibold text-slate-800">
                         {r.name} • {r.phone} • {r.carName ?? "-"}
                       </Typography>
-                      <Typography className="mt-1 text-xs text-slate-500 line-clamp-2">{r.summaryText}</Typography>
+                      <Typography className="mt-1 text-xs text-slate-500 line-clamp-2">
+                        {r.summaryText}
+                      </Typography>
                     </Box>
 
                     <Stack direction="row" spacing={1} className="items-center flex-wrap">
@@ -554,7 +648,12 @@ export default function AdminLeadsPage() {
                       </Tooltip>
 
                       <Tooltip title="เปิดแชท">
-                        <IconButton component="a" href={toChatHref(r.channel, r)} target="_blank" rel="noreferrer">
+                        <IconButton
+                          component="a"
+                          href={toChatHref(r.channel, r)}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
                           <ChatRoundedIcon />
                         </IconButton>
                       </Tooltip>
@@ -564,7 +663,13 @@ export default function AdminLeadsPage() {
                         size="small"
                         value={r.status}
                         onChange={(e) => updateStatus(r.id, e.target.value as LeadStatus)}
-                        sx={{ ...roundedFieldSX, minWidth: 160, "& .MuiInputBase-root": { backgroundColor: "rgb(248 250 252)" } }}
+                        sx={{
+                          ...roundedFieldSX,
+                          minWidth: 160,
+                          "& .MuiInputBase-root": {
+                            backgroundColor: "rgb(248 250 252)",
+                          },
+                        }}
                       >
                         <MenuItem value="new">ใหม่</MenuItem>
                         <MenuItem value="contacted">ติดต่อแล้ว</MenuItem>
@@ -603,25 +708,24 @@ export default function AdminLeadsPage() {
         </CardContent>
       </Card>
 
-      {/* Drawer */}
       <Drawer
         anchor={isMobile ? "bottom" : "right"}
         open={!!openId}
         onClose={() => setOpenId(null)}
         PaperProps={{
           sx: {
-            width: isMobile ? "100%" : 500,
+            width: isMobile ? "100%" : 700,
             height: isMobile ? "80%" : "100%",
           },
         }}
       >
-        <Box className="p-5">
+        <Box className="p-4">
           <Stack direction="row" spacing={1.25} className="items-center justify-between">
-            <Stack direction="row" spacing={1.25} className="items-center">
+            <Stack direction="row" spacing={1.25} className="items-center min-w-0">
               <Avatar
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: 42,
+                  height: 42,
                   bgcolor: "rgb(248 250 252)",
                   border: "1px solid rgb(226 232 240)",
                   color: "rgb(15 23 42)",
@@ -629,196 +733,300 @@ export default function AdminLeadsPage() {
               >
                 <PersonRoundedIcon />
               </Avatar>
+
               <Box className="min-w-0">
-                <Typography className="text-sm font-black text-slate-900">{selected?.name ?? "-"}</Typography>
-                <Typography className="text-xs text-slate-500">{selected?.id ?? "-"} • {selected?.phone ?? "-"}</Typography>
+                <Typography className="text-sm font-black text-slate-900">
+                  {selected?.name ?? "-"}
+                </Typography>
+                <Typography className="text-xs text-slate-500">
+                  {selected?.id ?? "-"} • {selected?.phone ?? "-"}
+                </Typography>
               </Box>
             </Stack>
 
-            {selected ? (
-              <Chip
-                size="small"
-                label={statusMeta(selected.status).label}
-                sx={{ ...statusChipSX(statusMeta(selected.status).tone), height: 24, fontSize: 11, fontWeight: 900 }}
-              />
-            ) : null}
-          </Stack>
-
-          <Divider className="my-4! border-slate-200!" />
-
-          <Box>
-            <Typography className="text-xs text-slate-500">Quick actions</Typography>
-            <Stack direction="row" spacing={1} className="mt-2 flex-wrap">
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<MarkEmailReadRoundedIcon />}
-                onClick={() => selected && updateStatus(selected.id, "contacted")}
-                sx={{ textTransform: "none", borderRadius: 2, borderColor: "rgb(226 232 240)" }}
-                disabled={!selected}
-              >
-                ติดตามแล้ว
-              </Button>
-
-              <Button
-                size="small"
-                variant="contained"
-                startIcon={<CheckCircleRoundedIcon />}
-                onClick={() => selected && updateStatus(selected.id, "won")}
-                sx={{
-                  textTransform: "none",
-                  bgcolor: "rgb(15 23 42)",
-                  boxShadow: "none",
-                  "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
-                  borderRadius: 2,
-                }}
-                disabled={!selected}
-              >
-                ปิดการขาย
-              </Button>
-
-              <Button
-                size="small"
-                variant="outlined"
-                startIcon={<CloseRoundedIcon />}
-                onClick={() => selected && updateStatus(selected.id, "lost")}
-                sx={{ textTransform: "none", borderRadius: 2, borderColor: "rgb(226 232 240)" }}
-                disabled={!selected}
-              >
-                ไม่สำเร็จ
-              </Button>
-            </Stack>
-          </Box>
-
-          <Divider className="my-4! border-slate-200!" />
-
-          <Stack spacing={1.5}>
-            <Box>
-              <Stack direction="row" className="items-center justify-between">
-                <Typography className="text-xs text-slate-500">สรุป</Typography>
-                <Button
+            <Stack direction="row" spacing={1} className="items-center">
+              {selected ? (
+                <Chip
                   size="small"
-                  variant="outlined"
-                  startIcon={<ContentCopyRoundedIcon />}
-                  onClick={() => selected && copySummary(selected)}
-                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "rgb(226 232 240)" }}
-                  disabled={!selected}
-                >
-                  คัดลอก
-                </Button>
-              </Stack>
-
-              <Typography className="mt-2 text-sm text-slate-900 whitespace-pre-line">
-                {selected ? buildSummaryText(selected) : "-"}
-              </Typography>
-            </Box>
-
-            <Divider className="border-slate-200!" />
-
-            <Box>
-              <Typography className="text-xs text-slate-500 flex items-center gap-1">
-                <ScheduleRoundedIcon fontSize="inherit" />
-                ตั้งเวลาติดตาม (Follow-up)
-              </Typography>
-
-              <TextField
-                type="datetime-local"
-                size="small"
-                value={followUpLocal}
-                onChange={(e) => setFollowUpLocal(e.target.value)}
-                sx={{ mt: 1.5, ...roundedFieldSX }}
-                fullWidth
-                InputLabelProps={{ shrink: true }}
-              />
-
-              <Stack direction="row" spacing={1} className="mt-2 flex-wrap">
-                <Button
-                  size="small"
-                  variant="contained"
-                  onClick={saveFollowUpFromInput}
+                  label={statusMeta(selected.status).label}
                   sx={{
-                    textTransform: "none",
-                    bgcolor: "rgb(15 23 42)",
-                    boxShadow: "none",
-                    "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
-                    borderRadius: 2,
+                    ...statusChipSX(statusMeta(selected.status).tone),
+                    height: 24,
+                    fontSize: 11,
+                    fontWeight: 900,
                   }}
-                  disabled={!selected}
-                >
-                  บันทึก
-                </Button>
+                />
+              ) : null}
 
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={() => setFollowUpNowPlus(60)}
-                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "rgb(226 232 240)" }}
-                  disabled={!selected}
-                >
-                  +1 ชม
-                </Button>
-
-                <Button
-                  size="small"
-                  variant="outlined"
-                  onClick={setFollowUpTomorrow10}
-                  sx={{ textTransform: "none", borderRadius: 2, borderColor: "rgb(226 232 240)" }}
-                  disabled={!selected}
-                >
-                  พรุ่งนี้ 10:00
-                </Button>
-
-                <Button
-                  size="small"
-                  variant="text"
-                  onClick={clearFollowUp}
-                  sx={{ textTransform: "none", borderRadius: 2, color: "rgb(100 116 139)" }}
-                  disabled={!selected}
-                >
-                  ล้าง
-                </Button>
-              </Stack>
-            </Box>
-
-            <Divider className="border-slate-200!" />
-
-            <Stack spacing={1}>
-              <Button
-                component="a"
-                href={selected ? toChatHref(selected.channel, selected) : "#"}
-                target="_blank"
-                rel="noreferrer"
-                variant="contained"
-                startIcon={<ChatRoundedIcon />}
-                sx={{
-                  textTransform: "none",
-                  bgcolor: "rgb(15 23 42)",
-                  boxShadow: "none",
-                  "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
-                  borderRadius: 2.5,
-                }}
-                disabled={!selected}
-              >
-                เปิดแชทพร้อมข้อความสรุป
-              </Button>
-
-              <Button
-                component="a"
-                href={selected ? toTelHref(selected.phone) : "#"}
-                variant="outlined"
-                startIcon={<CallRoundedIcon />}
-                sx={{ textTransform: "none", borderRadius: 2.5, borderColor: "rgb(226 232 240)" }}
-                disabled={!selected}
-              >
-                โทรหาลูกค้า
-              </Button>
+              <IconButton onClick={() => setOpenId(null)}>
+                <CloseRoundedIcon />
+              </IconButton>
             </Stack>
           </Stack>
+
+          <Divider className="my-4! border-slate-200!" />
+
+          {selected ? (
+            <Stack spacing={2}>
+              <Box className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                <Box
+                  className="relative bg-linear-to-br from-slate-900 to-slate-700"
+                  sx={{ minHeight: 220 }}
+                >
+                  <Box className="grid h-55 w-full place-items-center text-slate-300">
+                    <ForumRoundedIcon sx={{ fontSize: 56 }} />
+                  </Box>
+
+                  <Box
+                    className="absolute inset-0"
+                    sx={{
+                      background:
+                        "linear-gradient(to bottom, rgba(15,23,42,0.82), rgba(15,23,42,0.18))",
+                    }}
+                  />
+
+                  <Box className="absolute inset-x-0 top-0 p-4 text-white">
+                    <Typography className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-300">
+                      Lead Overview
+                    </Typography>
+                    <Typography className="mt-2 text-xl font-extrabold">
+                      {selected.carName ?? "ยังไม่ได้ระบุรถ"}
+                    </Typography>
+                    <Typography className="mt-2 text-sm text-slate-200">
+                      {selected.pickupDate ?? "-"} ถึง {selected.returnDate ?? "-"}
+                    </Typography>
+                    <Typography className="mt-4 text-sm text-slate-300">ยอดประมาณ</Typography>
+                    <Typography className="text-2xl font-extrabold">
+                      {formatTHB(selected.amountEstimate)}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              <SectionCard title="Quick actions">
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1.2}>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<MarkEmailReadRoundedIcon />}
+                    onClick={() => updateStatus(selected.id, "contacted")}
+                    sx={{
+                      flex: 1,
+                      textTransform: "none",
+                      borderRadius: 2.5,
+                      borderColor: "rgb(226 232 240)",
+                    }}
+                  >
+                    ติดตามแล้ว
+                  </Button>
+
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<CheckCircleRoundedIcon />}
+                    onClick={() => updateStatus(selected.id, "won")}
+                    sx={{
+                      flex: 1,
+                      textTransform: "none",
+                      bgcolor: "rgb(15 23 42)",
+                      boxShadow: "none",
+                      borderRadius: 2.5,
+                      "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
+                    }}
+                  >
+                    ปิดการขาย
+                  </Button>
+
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<CloseRoundedIcon />}
+                    onClick={() => updateStatus(selected.id, "lost")}
+                    sx={{
+                      flex: 1,
+                      textTransform: "none",
+                      borderRadius: 2.5,
+                      borderColor: "rgb(226 232 240)",
+                    }}
+                  >
+                    ไม่สำเร็จ
+                  </Button>
+                </Stack>
+              </SectionCard>
+
+              <Box className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <SectionCard title="ข้อมูลลูกค้า">
+                  <InfoRow label="ชื่อ" value={selected.name} />
+                  <InfoRow label="เบอร์โทร" value={selected.phone} />
+                  <InfoRow label="ช่องทาง" value={channelLabel(selected.channel)} />
+                  <InfoRow label="สถานะ" value={<Chip size="small" label={statusMeta(selected.status).label} sx={statusChipSX(statusMeta(selected.status).tone)} />} />
+                </SectionCard>
+
+                <SectionCard title="ข้อมูลการจอง">
+                  <InfoRow label="รถ" value={selected.carName ?? "-"} />
+                  <InfoRow label="วันรับรถ" value={selected.pickupDate ?? "-"} />
+                  <InfoRow label="วันคืนรถ" value={selected.returnDate ?? "-"} />
+                  <InfoRow label="ยอดประมาณ" value={formatTHB(selected.amountEstimate)} />
+                </SectionCard>
+
+                <SectionCard title="สถานที่">
+                  <InfoRow label="จุดรับรถ" value={selected.pickupPoint ?? "-"} />
+                  <InfoRow label="จุดคืนรถ" value={selected.returnPoint ?? "-"} />
+                  <InfoRow label="สร้างเมื่อ" value={formatDateTimeTH(selected.createdAt)} />
+                </SectionCard>
+
+                <SectionCard title="สรุป lead">
+                  <Stack spacing={2}>
+                    <Box>
+                      <Stack direction="row" className="items-center justify-between">
+                        <Typography className="text-xs text-slate-500">ข้อความสรุป</Typography>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<ContentCopyRoundedIcon />}
+                          onClick={() => copySummary(selected)}
+                          sx={{
+                            textTransform: "none",
+                            borderRadius: 2,
+                            borderColor: "rgb(226 232 240)",
+                          }}
+                        >
+                          คัดลอก
+                        </Button>
+                      </Stack>
+
+                      <Typography className="mt-2 text-sm whitespace-pre-line text-slate-900">
+                        {buildSummaryText(selected)}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                </SectionCard>
+              </Box>
+
+              <SectionCard title="ตั้งเวลาติดตาม (Follow-up)">
+                <Typography className="text-xs text-slate-500 flex items-center gap-1">
+                  <ScheduleRoundedIcon fontSize="inherit" />
+                  ตั้งวันและเวลาที่ต้องติดตามลูกค้ารายนี้
+                </Typography>
+
+                <TextField
+                  type="datetime-local"
+                  size="small"
+                  value={followUpLocal}
+                  onChange={(e) => setFollowUpLocal(e.target.value)}
+                  sx={{ ...roundedFieldSX }}
+                  fullWidth
+                  InputLabelProps={{ shrink: true }}
+                />
+
+                <Stack direction="row" spacing={1} className="flex-wrap">
+                  <Button
+                    size="small"
+                    variant="contained"
+                    onClick={saveFollowUpFromInput}
+                    sx={{
+                      textTransform: "none",
+                      bgcolor: "rgb(15 23 42)",
+                      boxShadow: "none",
+                      borderRadius: 2,
+                      "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
+                    }}
+                  >
+                    บันทึก
+                  </Button>
+
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setFollowUpNowPlus(60)}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 2,
+                      borderColor: "rgb(226 232 240)",
+                    }}
+                  >
+                    +1 ชม
+                  </Button>
+
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={setFollowUpTomorrow10}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 2,
+                      borderColor: "rgb(226 232 240)",
+                    }}
+                  >
+                    พรุ่งนี้ 10:00
+                  </Button>
+
+                  <Button
+                    size="small"
+                    variant="text"
+                    onClick={clearFollowUp}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 2,
+                      color: "rgb(100 116 139)",
+                    }}
+                  >
+                    ล้าง
+                  </Button>
+                </Stack>
+              </SectionCard>
+
+              <SectionCard title="ติดต่อกลับ">
+                <Stack spacing={1}>
+                  <Button
+                    component="a"
+                    href={toChatHref(selected.channel, selected)}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="contained"
+                    startIcon={<ChatRoundedIcon />}
+                    sx={{
+                      textTransform: "none",
+                      bgcolor: "rgb(15 23 42)",
+                      boxShadow: "none",
+                      borderRadius: 2.5,
+                      "&:hover": { bgcolor: "rgb(2 6 23)", boxShadow: "none" },
+                    }}
+                  >
+                    เปิดแชทพร้อมข้อความสรุป
+                  </Button>
+
+                  <Button
+                    component="a"
+                    href={toTelHref(selected.phone)}
+                    variant="outlined"
+                    startIcon={<CallRoundedIcon />}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 2.5,
+                      borderColor: "rgb(226 232 240)",
+                    }}
+                  >
+                    โทรหาลูกค้า
+                  </Button>
+                </Stack>
+              </SectionCard>
+            </Stack>
+          ) : null}
         </Box>
       </Drawer>
 
-      <Snackbar open={snack.open} autoHideDuration={2200} onClose={() => setSnack((s) => ({ ...s, open: false }))}>
-        <Alert severity={snack.type} variant="filled" onClose={() => setSnack((s) => ({ ...s, open: false }))}>
+      <Snackbar
+        open={snack.open}
+        autoHideDuration={2200}
+        onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+      >
+        <Alert
+          severity={snack.type}
+          variant="filled"
+          onClose={() => setSnack((s) => ({ ...s, open: false }))}
+        >
           {snack.msg}
         </Alert>
       </Snackbar>
