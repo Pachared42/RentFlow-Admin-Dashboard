@@ -142,16 +142,15 @@ export default function AdminSidebar({
                         py: { xs: 1.4, md: 1.1 },
                         bgcolor: active ? "rgb(241 245 249)" : "transparent",
                         border: active
-                          ? "1px solid rgb(148 163 184)"
+                          ? "1px solid rgb(203 213 225)"
                           : "1px solid transparent",
                         "&:hover": {
                           backgroundColor: active
                             ? "rgb(241 245 249)"
                             : "rgb(248 250 252)",
-                          border: "1px solid rgb(148 163 184)",
+                          border: "1px solid rgb(203 213 225)",
                         },
-                        transition:
-                          "background-color 150ms ease, border 150ms ease",
+                        transition: "background-color 150ms ease, border 150ms ease",
                       }}
                       selected={active}
                     >
